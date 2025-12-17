@@ -17,7 +17,15 @@
   },
   "fonts": {
   "family": "Lexend Deca, sans-serif"
-},
+}, 
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
+  },
   "navigation": {
     "dropdowns": [
       {
