@@ -214,13 +214,10 @@ async function criarPagamento() {
     const response = await axios.post(
       `${API_URL}/payments`,
       {
-        amount: 10000,
-        description: 'Pagamento de teste',
-        customer: {
-          name: 'João Silva',
-          email: 'joao@exemplo.com',
-          document: '12345678900'
-        }
+        amount: 150.0,
+        email: 'cliente@example.com',
+        observation: 'Pedido #9876',
+        webhookUrl: 'https://example.com/webhook'
       },
       {
         headers: {
@@ -232,7 +229,8 @@ async function criarPagamento() {
     
     const payment = response.data;
     console.log('Pagamento criado:', payment.id);
-    console.log('URL de checkout:', payment.checkout_url);
+    console.log('QR Code URL:', payment.qrCodeUrl);
+    console.log('Pix Copia e Cola:', payment.qrCopyPaste);
     
     // 2. Aguardar webhook ou consultar status periodicamente
     await aguardarPagamento(payment.id);
@@ -258,8 +256,8 @@ async function aguardarPagamento(paymentId) {
     const status = response.data.status;
     console.log(`Status atual: ${status}`);
     
-    if (status === 'paid') {
-      console.log('Pagamento confirmado!');
+    if (status === 'approved') {
+      console.log('Pagamento aprovado!');
       return;
     }
     
