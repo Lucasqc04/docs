@@ -60,6 +60,42 @@ O cliente pode pagar de duas formas:
 
 Após o pagamento ser confirmado pela instituição financeira, o status muda automaticamente.
 
+### Gerar QR Code personalizado
+
+Você pode gerar um QR Code personalizado com sua própria marca usando o `qrCopyPaste`:
+
+```bash
+npm install qrcode.react
+```
+
+```jsx
+import { QRCodeSVG } from 'qrcode.react';
+
+function PaymentQRCode({ qrCopyPaste }) {
+  return (
+    <div className="qr-code-container">
+      <QRCodeSVG
+        value={qrCopyPaste}
+        size={256}
+        level="H"
+        includeMargin={true}
+        imageSettings={{
+          src: "/logo.png",
+          height: 48,
+          width: 48,
+          excavate: true,
+        }}
+      />
+      <p>Escaneie o QR Code para pagar</p>
+    </div>
+  );
+}
+```
+
+<Note>
+Use `qrcode.react` para gerar QR Codes personalizados com sua logo e cores da marca, mantendo a identidade visual da sua aplicação.
+</Note>
+
 ## Passo 3: Receber notificação via webhook
 
 Se você configurou `webhookUrl` na criação do pagamento, receberá dois tipos de eventos:
