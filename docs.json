@@ -5,6 +5,9 @@
   "colors": {
     "primary": "#FF6B00"
   },
+  "fonts": {
+  "family": "Lexend Deca, sans-serif"
+},
   "navigation": {
     "dropdowns": [
       {
