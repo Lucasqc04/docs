@@ -1,6 +1,36 @@
 ---
 title: Limites
+description: Limites de valores e restrições da API Pública da PagueBit
 ---
 
-- **Valor mínimo**: R$ 5,00
-- **Valor máximo**: R$ 3.000,00
+A API Pública da **PagueBit** possui limites para garantir segurança, conformidade e prevenção a fraudes.
+
+## Limites por pagamento
+
+- **Valor mínimo por pagamento**: R$ 5,00  
+- **Valor máximo por pagamento**: R$ 3.000,00  
+
+Pagamentos fora desse intervalo serão recusados no momento da criação.
+
+---
+
+## Limite diário por CPF pagador
+
+Cada **CPF pagador** possui um **limite diário total de R$ 6.000,00**, considerando a soma de todos os pagamentos realizados no mesmo dia.
+
+### O que acontece ao ultrapassar o limite?
+
+- Se um pagamento fizer o CPF ultrapassar o limite diário de **R$ 6.000,00**:
+  - O pagamento **poderá ser criado e pago**
+  - Porém, ele será **automaticamente reembolsado**
+  - O status intermediário será **review**
+  - O status final será **not_approved**
+
+Esse controle é feito de forma automática pelo sistema da PagueBit.
+
+---
+
+## Observações importantes
+
+- O limite diário é **resetado diariamente**
+- O controle é feito **por CPF pagador**, independentemente da loja
