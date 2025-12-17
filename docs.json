@@ -37,43 +37,39 @@
       "prefill": true
     }
   },
-  "navigation": {
-    "dropdowns": [
-      {
-        "dropdown": "API Pública",
-        "icon": "terminal",
-        "groups": [
-          {
-            "group": "Introdução",
-            "pages": ["public-api/introduction"]
-          },
-          {
-            "group": "Autenticação",
-            "pages": ["public-api/authentication"]
-          },
-          {
-            "group": "Limites",
-            "pages": ["public-api/limits"]
-          },
-          {
-            "group": "Endpoints",
-            "openapi": "openapi.json",
-            "pages": ["public-api/endpoints"]
-          },
-          {
-            "group": "Webhooks",
-            "pages": ["public-api/webhooks"]
-          },
-          {
-            "group": "Status",
-            "pages": ["public-api/status"]
-          },
-          {
-            "group": "Exemplos",
-            "pages": ["public-api/examples"]
-          }
-        ]
-      }
-    ]
-  }
+ "navigation": {
+  "dropdowns": [
+    {
+      "dropdown": "Início",
+      "icon": "home",
+      "pages": ["index"]
+    },
+    {
+      "dropdown": "API Pública",
+      "icon": "terminal",
+      "groups": [
+        {
+          "group": "Introdução",
+          "pages": ["public-api/introduction"]
+        },
+        {
+          "group": "Autenticação",
+          "pages": ["public-api/authentication"]
+        },
+        {
+          "group": "Limites",
+          "pages": ["public-api/limits"]
+        },
+        {
+          "group": "Endpoints",
+          "openapi": "openapi.json"
+        },
+        {
+          "group": "Webhooks",
+          "pages": ["public-api/webhooks"]
+        }
+      ]
+    }
+  ]
+}
 }
