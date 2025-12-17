@@ -1,25 +1,69 @@
 ---
-title: Endpoints
+title: 'Endpoints'
 ---
 
-## Endpoints
+# Endpoints
 
-### Criar pagamento dinâmico
+Explore e teste os principais endpoints da API Pública do PagueBit diretamente abaixo. Utilize o playground interativo para simular requisições e visualizar respostas em tempo real.
 
-- Método: `POST`
-- Caminho: `/api-public/payments`
-- Autenticação: Bearer Token
+---
 
-Body (JSON):
+## Criar pagamento dinâmico
 
-| Campo         | Tipo     | Obrigatório | Descrição                              |
-|---------------|----------|-------------|----------------------------------------|
-| `amount`      | number   | sim         | Valor entre 5 e 3000 (BRL)             |
-| `email`       | string   | sim         | E‑mail do cliente                      |
-| `observation` | string   | não         | Observação livre                       |
-| `webhookUrl`  | string   | não         | URL para receber webhooks              |
+<details>
+<summary><b>POST /api-public/payments</b></summary>
 
-Response (200):
+<Playground api="POST /api-public/payments" playground="interactive" />
+
+### Parâmetros do corpo (JSON)
+
+<ParamField body="amount" type="number" required>
+  Valor entre 5 e 3000 (BRL)
+</ParamField>
+<ParamField body="email" type="string">
+  E-mail do cliente
+</ParamField>
+<ParamField body="observation" type="string">
+  Observação livre
+</ParamField>
+<ParamField body="webhookUrl" type="string">
+  URL para receber webhooks
+</ParamField>
+
+### Resposta de sucesso
+
+<ResponseField name="id" type="string" required>
+  ID do pagamento criado
+</ResponseField>
+<ResponseField name="status" type="string" required>
+  Status do pagamento (`pending`, `approved`, etc)
+</ResponseField>
+<ResponseField name="amount" type="number" required>
+  Valor do pagamento
+</ResponseField>
+<ResponseField name="storeId" type="string" required>
+  ID da loja
+</ResponseField>
+<ResponseField name="createdAt" type="string" required>
+  Data de criação (ISO)
+</ResponseField>
+<ResponseField name="webhookUrl" type="string">
+  URL do webhook
+</ResponseField>
+<ResponseField name="observation" type="string">
+  Observação livre
+</ResponseField>
+<ResponseField name="email" type="string">
+  E-mail do cliente
+</ResponseField>
+<ResponseField name="qrCodeUrl" type="string">
+  URL do QR Code
+</ResponseField>
+<ResponseField name="qrCopyPaste" type="string">
+  Código copia e cola do Pix
+</ResponseField>
+
+#### Exemplo de resposta
 
 ```json
 {
@@ -36,19 +80,64 @@ Response (200):
 }
 ```
 
-Erros (400):
+#### Possíveis erros
 
 - `Valor mínimo permitido para API pública é R$ 5,00.`
 - `Valor máximo permitido para API pública é R$ 3000,00.`
 
-### Buscar pagamento por ID
+</details>
 
-- Método: `GET`
-- Caminho: `/api-public/payments/:id`
-- Autenticação: Bearer Token
-- Restrito à loja do token
+---
 
-Response (200):
+## Buscar pagamento por ID
+
+<details>
+<summary><b>GET /api-public/payments/{id}</b></summary>
+
+<Playground api="GET /api-public/payments/{id}" playground="interactive" />
+
+### Parâmetros de rota
+
+<ParamField path="id" type="string" required>
+  ID do pagamento a ser buscado
+</ParamField>
+
+### Resposta de sucesso
+
+<!-- Campos iguais ao endpoint de criação -->
+
+<ResponseField name="id" type="string" required>
+  ID do pagamento
+</ResponseField>
+<ResponseField name="status" type="string" required>
+  Status do pagamento
+</ResponseField>
+<ResponseField name="amount" type="number" required>
+  Valor do pagamento
+</ResponseField>
+<ResponseField name="storeId" type="string" required>
+  ID da loja
+</ResponseField>
+<ResponseField name="createdAt" type="string" required>
+  Data de criação (ISO)
+</ResponseField>
+<ResponseField name="webhookUrl" type="string">
+  URL do webhook
+</ResponseField>
+<ResponseField name="observation" type="string">
+  Observação livre
+</ResponseField>
+<ResponseField name="email" type="string">
+  E-mail do cliente
+</ResponseField>
+<ResponseField name="qrCodeUrl" type="string">
+  URL do QR Code
+</ResponseField>
+<ResponseField name="qrCopyPaste" type="string">
+  Código copia e cola do Pix
+</ResponseField>
+
+#### Exemplo de resposta
 
 ```json
 {
@@ -65,24 +154,49 @@ Response (200):
 }
 ```
 
-Erros (404): `Pagamento não encontrado.`
+#### Possíveis erros
 
-### Listar pagamentos por loja
+- `Pagamento não encontrado.`
 
-- Método: `GET`
-- Caminho: `/api-public/payments`
-- Autenticação: Bearer Token
-- Restrito à loja do token
+</details>
 
-Query params:
+---
 
-| Parâmetro | Tipo   | Default | Faixa       | Descrição                                        |
-|-----------|--------|---------|-------------|--------------------------------------------------|
-| `page`    | int    | 1       | ≥ 1         | Página                                           |
-| `limit`   | int    | 50      | 1–200       | Itens por página                                 |
-| `status`  | string | —       | —           | Filtra por `pending`, `approved`, `review`, `not_approved` |
+## Listar pagamentos por loja
 
-Response (200):
+<details>
+<summary><b>GET /api-public/payments</b></summary>
+
+<Playground api="GET /api-public/payments" playground="interactive" />
+
+### Parâmetros de query
+
+<ParamField query="page" type="int" default="1">
+  Página (≥ 1)
+</ParamField>
+<ParamField query="limit" type="int" default="50">
+  Itens por página (1–200)
+</ParamField>
+<ParamField query="status" type="string">
+  Filtra por `pending`, `approved`, `review`, `not_approved`
+</ParamField>
+
+### Resposta de sucesso
+
+<ResponseField name="items" type="array" required>
+  Lista de pagamentos
+</ResponseField>
+<ResponseField name="page" type="int" required>
+  Página atual
+</ResponseField>
+<ResponseField name="limit" type="int" required>
+  Limite de itens por página
+</ResponseField>
+<ResponseField name="total" type="int" required>
+  Total de pagamentos encontrados
+</ResponseField>
+
+#### Exemplo de resposta
 
 ```json
 {
@@ -105,3 +219,10 @@ Response (200):
   "total": 237
 }
 ```
+
+</details>
+
+---
+
+> ⚠️ **Atenção:** Todos os endpoints exigem autenticação via Bearer Token.  
+> Consulte a seção de [Autenticação](./authentication) para saber como obter e usar seu token.
