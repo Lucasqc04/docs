@@ -216,25 +216,17 @@ curl -X GET https://public-api-prod.paguebit.com/public-api/v1/payments/pay_123 
 
 Veja mais detalhes sobre cada status na [página de Status de pagamentos](/public-api/status).
 
-## Fluxo de erro
+## Tratamento de erros
 
-Se houver erro na criação do pagamento, você receberá uma resposta com código de erro:
+A API retorna códigos HTTP padrão para indicar sucesso ou falha:
 
-```json
-{
-  "error": {
-    "code": "invalid_amount",
-    "message": "O valor deve ser maior que R$ 1,00"
-  }
-}
-```
+- **200** - Requisição bem-sucedida
+- **400** - Erro de validação nos dados enviados
+- **401** - Token ausente ou inválido
+- **403** - Loja inativa
+- **404** - Pagamento não encontrado
 
-### Códigos de erro comuns
-
-- `invalid_amount` - Valor inválido ou fora dos limites
-- `invalid_customer` - Dados do cliente incompletos ou inválidos
-- `rate_limit_exceeded` - Limite de requisições excedido
-- `unauthorized` - Token de autenticação inválido
+Veja todos os erros possíveis e como tratá-los na [página de Erros](/public-api/errors).
 
 ## Próximos passos
 
