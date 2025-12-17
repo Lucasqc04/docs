@@ -57,19 +57,16 @@
           },
           {
             "group": "Endpoints",
-            "pages": [
-              "public-api/endpoints/create-payment",
-              "public-api/endpoints/get-payment",
-              "public-api/endpoints/list-payments"
-            ]
-          },
-          {
-            "group": "Status",
-            "pages": ["public-api/status"]
+            "openapi": "openapi.json",
+            "pages": ["public-api/endpoints"]
           },
           {
             "group": "Webhooks",
             "pages": ["public-api/webhooks"]
+          },
+          {
+            "group": "Status",
+            "pages": ["public-api/status"]
           },
           {
             "group": "Exemplos",

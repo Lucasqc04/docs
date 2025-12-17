@@ -26,13 +26,6 @@
     "/api-public/payments": {
       "post": {
         "summary": "Criar pagamento dinâmico",
-        "x-mint": {
-          "metadata": {
-            "title": "Criar pagamento",
-            "description": "Cria um pagamento Pix dinâmico e retorna QR Code",
-            "href": "/public-api/endpoints/create-payment"
-          }
-        },
         "requestBody": {
           "required": true,
           "content": {
@@ -58,13 +51,6 @@
       },
       "get": {
         "summary": "Listar pagamentos por loja",
-        "x-mint": {
-          "metadata": {
-            "title": "Listar pagamentos",
-            "description": "Lista todos os pagamentos da loja, com filtros de status e paginação",
-            "href": "/public-api/endpoints/list-payments"
-          }
-        },
         "parameters": [
           {
             "name": "page",
@@ -100,13 +86,6 @@
     "/api-public/payments/{id}": {
       "get": {
         "summary": "Buscar pagamento por ID",
-        "x-mint": {
-          "metadata": {
-            "title": "Buscar pagamento",
-            "description": "Busca um pagamento pelo ID e retorna seus detalhes",
-            "href": "/public-api/endpoints/get-payment"
-          }
-        },
         "parameters": [
           {
             "name": "id",
