@@ -62,50 +62,68 @@ Após o pagamento ser confirmado pela instituição financeira, o status muda au
 
 ## Passo 3: Receber notificação via webhook
 
-Quando o status do pagamento mudar, você receberá um webhook no endpoint configurado:
+Se você configurou `webhookUrl` na criação do pagamento, receberá dois tipos de eventos:
+
+### Evento: payment.created
+
+Enviado imediatamente após a criação do pagamento:
 
 ```json
 {
-  "event": "payment.paid",
-  "data": {
-    "id": "pay_abc123xyz",
-    "status": "paid",
-    "amount": 10000,
-    "paid_at": "2025-12-17T17:52:30Z"
-  }
+  "event": "payment.created",
+  "id": "pay_123",
+  "status": "pending",
+  "amount": 150.0,
+  "storeId": "store_abc",
+  "createdAt": "2025-12-16T15:00:00.000Z",
+  "webhookUrl": "https://example.com/webhook",
+  "observation": "Pedido #9876",
+  "email": "cliente@example.com",
+  "qrCodeUrl": "https://.../qrcode.png",
+  "qrCopyPaste": "000201010212..."
 }
 ```
 
-### Validar o webhook
+### Evento: payment.status_changed
 
-Sempre valide a assinatura do webhook para garantir autenticidade:
+Enviado quando o status do pagamento muda (ex: de `pending` para `approved`):
+
+```json
+{
+  "event": "payment.status_changed",
+  "id": "pay_123",
+  "status": "approved",
+  "previousStatus": "pending",
+  "amount": 150.0,
+  "storeId": "store_abc",
+  "createdAt": "2025-12-16T15:00:00.000Z",
+  "webhookUrl": "https://example.com/webhook",
+  "observation": "Pedido #9876",
+  "email": "cliente@example.com",
+  "qrCodeUrl": "https://.../qrcode.png",
+  "qrCopyPaste": "000201010212..."
+}
+```
+
+### Processar webhooks
+
+Exemplo de endpoint para receber webhooks:
 
 ```javascript
-const crypto = require('crypto');
-
-function validateWebhook(payload, signature, secret) {
-  const hash = crypto
-    .createHmac('sha256', secret)
-    .update(JSON.stringify(payload))
-    .digest('hex');
-  
-  return hash === signature;
-}
-
-// No seu endpoint
 app.post('/webhooks', (req, res) => {
-  const signature = req.headers['x-webhook-signature'];
+  const { event, id, status, previousStatus } = req.body;
   
-  if (!validateWebhook(req.body, signature, process.env.WEBHOOK_SECRET)) {
-    return res.status(401).send('Invalid signature');
+  if (event === 'payment.created') {
+    console.log(`Pagamento ${id} criado com status ${status}`);
   }
   
-  // Processar o evento
-  const { event, data } = req.body;
-  
-  if (event === 'payment.paid') {
-    console.log(`Pagamento ${data.id} foi pago!`);
-    // Liberar produto/serviço para o cliente
+  if (event === 'payment.status_changed') {
+    console.log(`Pagamento ${id} mudou de ${previousStatus} para ${status}`);
+    
+    if (status === 'approved') {
+      // Liberar produto/serviço para o cliente
+      console.log('Pagamento aprovado! Liberando acesso...');
+    }
   }
   
   res.status(200).send('OK');
