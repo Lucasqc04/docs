@@ -1,0 +1,60 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "PagueBit API Docs",
+  "colors": {
+    "primary": "#3B82F6"
+  },
+  "navigation": {
+    "dropdowns": [
+      {
+        "dropdown": "API Pública",
+        "icon": "terminal",
+        "groups": [
+          {
+            "group": "Introdução",
+            "pages": [
+              "public-api/introduction"
+            ]
+          },
+          {
+            "group": "Autenticação",
+            "pages": [
+              "public-api/authentication"
+            ]
+          },
+          {
+            "group": "Limites",
+            "pages": [
+              "public-api/limits"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "public-api/endpoints"
+            ]
+          },
+          {
+            "group": "Webhooks",
+            "pages": [
+              "public-api/webhooks"
+            ]
+          },
+          {
+            "group": "Status",
+            "pages": [
+              "public-api/status"
+            ]
+          },
+          {
+            "group": "Exemplos",
+            "pages": [
+              "public-api/examples"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

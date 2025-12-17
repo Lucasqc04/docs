@@ -1,0 +1,16 @@
+---
+title: Status dos Pagamentos
+---
+
+## Status possíveis
+
+- `pending`: aguardando pagamento ou processamento
+- `approved`: pago e aprovado
+- `review`: em análise
+- `not_approved`: não aprovado (erro, cancelamento, expirado)
+- `paid`: consolidado (interno)
+- `withdrawal_processing`: em processamento de saque (interno)
+- `receipt_sent`: comprovante enviado (interno)
+- `rejected`: rejeitado (interno)
+
+Obs.: a API pública geralmente usa `pending`, `approved`, `review`, `not_approved`.

@@ -1,0 +1,107 @@
+---
+title: Endpoints
+---
+
+## Endpoints
+
+### Criar pagamento dinâmico
+
+- Método: `POST`
+- Caminho: `/api-public/payments`
+- Autenticação: Bearer Token
+
+Body (JSON):
+
+| Campo         | Tipo     | Obrigatório | Descrição                              |
+|---------------|----------|-------------|----------------------------------------|
+| `amount`      | number   | sim         | Valor entre 5 e 3000 (BRL)             |
+| `email`       | string   | sim         | E‑mail do cliente                      |
+| `observation` | string   | não         | Observação livre                       |
+| `webhookUrl`  | string   | não         | URL para receber webhooks              |
+
+Response (200):
+
+```json
+{
+  "id": "pay_123",
+  "status": "pending",
+  "amount": 150.0,
+  "storeId": "store_abc",
+  "createdAt": "2025-12-16T15:00:00.000Z",
+  "webhookUrl": "https://example.com/webhook",
+  "observation": "Pedido #9876",
+  "email": "cliente@example.com",
+  "qrCodeUrl": "https://.../qrcode.png",
+  "qrCopyPaste": "000201010212..."
+}
+```
+
+Erros (400):
+
+- `Valor mínimo permitido para API pública é R$ 5,00.`
+- `Valor máximo permitido para API pública é R$ 3000,00.`
+
+### Buscar pagamento por ID
+
+- Método: `GET`
+- Caminho: `/api-public/payments/:id`
+- Autenticação: Bearer Token
+- Restrito à loja do token
+
+Response (200):
+
+```json
+{
+  "id": "pay_123",
+  "status": "pending",
+  "amount": 150.0,
+  "storeId": "store_abc",
+  "createdAt": "2025-12-16T15:00:00.000Z",
+  "webhookUrl": "https://example.com/webhook",
+  "observation": "Pedido #9876",
+  "email": "cliente@example.com",
+  "qrCodeUrl": "https://.../qrcode.png",
+  "qrCopyPaste": "000201010212..."
+}
+```
+
+Erros (404): `Pagamento não encontrado.`
+
+### Listar pagamentos por loja
+
+- Método: `GET`
+- Caminho: `/api-public/payments`
+- Autenticação: Bearer Token
+- Restrito à loja do token
+
+Query params:
+
+| Parâmetro | Tipo   | Default | Faixa       | Descrição                                        |
+|-----------|--------|---------|-------------|--------------------------------------------------|
+| `page`    | int    | 1       | ≥ 1         | Página                                           |
+| `limit`   | int    | 50      | 1–200       | Itens por página                                 |
+| `status`  | string | —       | —           | Filtra por `pending`, `approved`, `review`, `not_approved` |
+
+Response (200):
+
+```json
+{
+  "items": [
+    {
+      "id": "pay_123",
+      "status": "approved",
+      "amount": 150.0,
+      "storeId": "store_abc",
+      "createdAt": "2025-12-16T15:00:00.000Z",
+      "webhookUrl": "https://example.com/webhook",
+      "observation": "Pedido #9876",
+      "email": "cliente@example.com",
+      "qrCodeUrl": "https://.../qrcode.png",
+      "qrCopyPaste": "000201010212..."
+    }
+  ],
+  "page": 1,
+  "limit": 50,
+  "total": 237
+}
+```

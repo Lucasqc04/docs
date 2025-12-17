@@ -1,0 +1,71 @@
+---
+title: Webhooks
+---
+
+## Webhooks
+
+Se o pagamento for criado com `webhookUrl`, a API envia webhooks:
+- `payment.created`: enviado após criação do pagamento.
+- `payment.status_changed`: enviado em transições de status do pagamento.
+
+Envio é best‑effort (falhas não bloqueiam a operação). Logs: `Webhook do pagamento <id> enviado para <url>`.
+
+### Payload de Webhook
+
+Campos enviados em ambos os eventos:
+
+| Campo         | Tipo     | Descrição                                  |
+|---------------|----------|--------------------------------------------|
+| `id`          | string   | ID do pagamento                            |
+| `status`      | string   | Status atual do pagamento                  |
+| `amount`      | number   | Valor do pagamento (BRL)                   |
+| `storeId`     | string   | ID da loja                                 |
+| `createdAt`   | string   | ISO datetime de criação                    |
+| `webhookUrl`  | string?  | URL configurada para o webhook (se houver) |
+| `observation` | string?  | Observação do pagamento                    |
+| `email`       | string   | E‑mail associado ao pagamento              |
+| `qrCodeUrl`   | string?  | URL do QR Code                             |
+| `qrCopyPaste` | string?  | Conteúdo do QR Copia e Cola                |
+
+Campo adicional em `payment.status_changed`:
+
+| Campo            | Tipo   | Descrição                 |
+|------------------|--------|---------------------------|
+| `previousStatus` | string | Status anterior do pago   |
+
+Exemplo `payment.created`:
+
+```json
+{
+  "event": "payment.created",
+  "id": "pay_123",
+  "status": "pending",
+  "amount": 150.0,
+  "storeId": "store_abc",
+  "createdAt": "2025-12-16T15:00:00.000Z",
+  "webhookUrl": "https://example.com/webhook",
+  "observation": "Pedido #9876",
+  "email": "cliente@example.com",
+  "qrCodeUrl": "https://.../qrcode.png",
+  "qrCopyPaste": "000201010212..."
+}
+```
+
+Exemplo `payment.status_changed`:
+
+```json
+{
+  "event": "payment.status_changed",
+  "id": "pay_123",
+  "status": "approved",
+  "previousStatus": "pending",
+  "amount": 150.0,
+  "storeId": "store_abc",
+  "createdAt": "2025-12-16T15:00:00.000Z",
+  "webhookUrl": "https://example.com/webhook",
+  "observation": "Pedido #9876",
+  "email": "cliente@example.com",
+  "qrCodeUrl": "https://.../qrcode.png",
+  "qrCopyPaste": "000201010212..."
+}
+```
