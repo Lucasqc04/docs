@@ -3,7 +3,7 @@
   "theme": "mint",
   "name": "PagueBit API Docs",
   "colors": {
-    "primary": "#3B82F6"
+    "primary": "#FF6B00"
   },
   "navigation": {
     "dropdowns": [
@@ -13,45 +13,31 @@
         "groups": [
           {
             "group": "Introdução",
-            "pages": [
-              "public-api/introduction"
-            ]
+            "pages": ["public-api/introduction"]
           },
           {
             "group": "Autenticação",
-            "pages": [
-              "public-api/authentication"
-            ]
+            "pages": ["public-api/authentication"]
           },
           {
             "group": "Limites",
-            "pages": [
-              "public-api/limits"
-            ]
+            "pages": ["public-api/limits"]
           },
           {
             "group": "Endpoints",
-            "pages": [
-              "public-api/endpoints"
-            ]
+            "pages": ["public-api/endpoints"]
           },
           {
             "group": "Webhooks",
-            "pages": [
-              "public-api/webhooks"
-            ]
+            "pages": ["public-api/webhooks"]
           },
           {
             "group": "Status",
-            "pages": [
-              "public-api/status"
-            ]
+            "pages": ["public-api/status"]
           },
           {
             "group": "Exemplos",
-            "pages": [
-              "public-api/examples"
-            ]
+            "pages": ["public-api/examples"]
           }
         ]
       }
