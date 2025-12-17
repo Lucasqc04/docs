@@ -165,11 +165,18 @@ curl -X GET https://api.exemplo.com/v1/payments/pay_123 \
 
 | Status | Descrição |
 |--------|-----------|
-| `pending` | Aguardando pagamento |
-| `approved` | Pagamento aprovado |
-| `cancelled` | Pagamento cancelado |
-| `expired` | Pagamento expirado |
-| `refunded` | Pagamento estornado |
+| `pending` | Aguardando pagamento ou processamento |
+| `approved` | Pago e aprovado - **valor confirmado e disponível** |
+| `review` | Em análise - **não significa aprovação** |
+| `not_approved` | Não aprovado (erro, cancelamento ou expiração) |
+| `paid` | Consolidado (uso interno) |
+| `withdrawal_processing` | Em processamento de saque (uso interno) |
+| `receipt_sent` | Comprovante enviado (uso interno) |
+| `rejected` | Rejeitado (uso interno) |
+
+<Warning>
+**Atenção:** Somente o status `approved` indica que o valor foi confirmado e está disponível. Pagamentos em `review` por mais de 30 minutos são automaticamente reembolsados.
+</Warning>
 
 Veja mais detalhes sobre cada status na [página de Status de pagamentos](/public-api/status).
 
