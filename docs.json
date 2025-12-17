@@ -51,7 +51,11 @@
       },
       {
         "group": "Endpoints",
-        "openapi": "openapi.json"
+        "openapi": "openapi.json",
+        "pages": [
+          "public-api/endpoints",
+          "public-api/status"
+        ]
       },
       {
         "group": "Webhooks",
