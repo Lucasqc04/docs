@@ -166,9 +166,9 @@ curl -X GET https://api.exemplo.com/v1/payments/pay_123 \
 | Status | Descrição |
 |--------|-----------|
 | `pending` | Aguardando pagamento |
-| `paid` | Pagamento confirmado |
-| `expired` | Pagamento expirou (após 24h) |
-| `cancelled` | Pagamento cancelado manualmente |
+| `approved` | Pagamento aprovado |
+| `cancelled` | Pagamento cancelado |
+| `expired` | Pagamento expirado |
 | `refunded` | Pagamento estornado |
 
 Veja mais detalhes sobre cada status na [página de Status de pagamentos](/public-api/status).
