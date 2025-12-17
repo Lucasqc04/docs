@@ -61,6 +61,9 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
 <ResponseField name="qrCopyPaste" type="string">
   Código copia e cola do Pix
 </ResponseField>
+<ResponseField name="isPublic" type="boolean" required>
+  Indica se o pagamento é público (sempre <code>true</code> para pagamentos criados pela API pública)
+</ResponseField>
 
 #### Exemplo de resposta
 
@@ -75,7 +78,8 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
   "qrCodeUrl": "https://.../qrcode.png",
-  "qrCopyPaste": "000201010212..."
+  "qrCopyPaste": "000201010212...",
+  "isPublic": true
 }
 ```
 
@@ -130,6 +134,9 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
 <ResponseField name="qrCopyPaste" type="string">
   Código copia e cola do Pix
 </ResponseField>
+<ResponseField name="isPublic" type="boolean" required>
+  Indica se o pagamento é público (true se foi criado pela API pública, false caso contrário)
+</ResponseField>
 
 #### Exemplo de resposta
 
@@ -144,7 +151,8 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
   "qrCodeUrl": "https://.../qrcode.png",
-  "qrCopyPaste": "000201010212..."
+  "qrCopyPaste": "000201010212...",
+  "isPublic": true
 }
 ```
 
@@ -202,7 +210,21 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
       "observation": "Pedido #9876",
       "email": "cliente@example.com",
       "qrCodeUrl": "https://.../qrcode.png",
-      "qrCopyPaste": "000201010212..."
+      "qrCopyPaste": "000201010212...",
+      "isPublic": true
+    },
+    {
+      "id": "pay_456",
+      "status": "pending",
+      "amount": 200.0,
+      "storeId": "store_abc",
+      "createdAt": "2025-12-16T16:00:00.000Z",
+      "webhookUrl": null,
+      "observation": null,
+      "email": "outrocliente@example.com",
+      "qrCodeUrl": null,
+      "qrCopyPaste": null,
+      "isPublic": false
     }
   ],
   "page": 1,
