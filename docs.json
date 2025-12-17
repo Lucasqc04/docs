@@ -3,7 +3,17 @@
   "theme": "maple",
   "name": "PagueBit API Docs",
   "colors": {
-    "primary": "#FF6B00"
+    "primary": "#FF6B00",
+    "light": "#FF6B00",
+    "dark": "#FF6B00"
+  },
+   "logo": {
+    "light": "/logo.png",
+    "dark": "/logo.png"
+  },
+   "favicon": {
+    "light": "/logo.png",
+    "dark": "/logo.png"
   },
   "fonts": {
   "family": "Lexend Deca, sans-serif"
