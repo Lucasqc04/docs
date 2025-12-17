@@ -45,7 +45,9 @@
         "pages": [
           "index",
           "public-api/authentication",
-          "public-api/limits"
+          "public-api/fluxo-completo",
+          "public-api/limits",
+          "public-api/errors"
         ]
       },
       {

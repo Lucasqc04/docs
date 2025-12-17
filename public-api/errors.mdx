@@ -1,0 +1,326 @@
+---
+title: Erros da API
+description: Códigos de erro, mensagens e como tratá-los
+---
+
+A API Pública retorna códigos HTTP padrão para indicar sucesso ou falha nas requisições. Esta página documenta todos os erros possíveis e suas causas.
+
+## Estrutura de resposta de erro
+
+Quando ocorre um erro, a API retorna um código HTTP apropriado e uma mensagem descritiva:
+
+```json
+{
+  "statusCode": 400,
+  "message": "Valor mínimo permitido para geração de pagamentos é R$ 5,00"
+}
+```
+
+## 401 Unauthorized
+
+Erros relacionados à autenticação.
+
+### Bearer token ausente
+
+**Mensagem:** `Bearer token ausente.`
+
+**Causa:** O header `Authorization` não foi enviado ou está vazio.
+
+**Solução:**
+
+```bash
+# ❌ Errado
+curl -X POST https://public-api-prod.paguebit.com/public-api/v1/payments
+
+# ✅ Correto
+curl -X POST https://public-api-prod.paguebit.com/public-api/v1/payments \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+```
+
+### Token inválido ou expirado
+
+**Mensagem:** `Token inválido ou expirado.`
+
+**Causa:** O token enviado não existe, está incorreto, expirou ou foi desativado.
+
+**Solução:**
+- Verifique se o token está correto
+- Gere um novo token se o atual expirou
+- Confirme que o token não foi desativado no painel
+
+```javascript
+// Exemplo de tratamento
+try {
+  const response = await axios.post(url, data, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+} catch (error) {
+  if (error.response?.status === 401) {
+    console.error('Token inválido. Gere um novo token.');
+    // Redirecionar para renovação de token
+  }
+}
+```
+
+## 403 Forbidden
+
+### Loja inativa
+
+**Mensagem:** `Loja inativa.`
+
+**Causa:** O token é válido, mas a loja associada está desativada.
+
+**Solução:**
+- Entre em contato com o suporte para reativar a loja
+- Verifique o status da loja no painel administrativo
+
+## 400 Bad Request
+
+Erros de validação nos dados enviados.
+
+### Valor mínimo não atingido
+
+**Mensagem:** `Valor mínimo permitido para geração de pagamentos é R$ 5,00.`
+
+**Causa:** O campo `amount` é menor que 5.
+
+**Solução:**
+
+```json
+// ❌ Errado
+{
+  "amount": 3.50
+}
+
+// ✅ Correto
+{
+  "amount": 5.00
+}
+```
+
+### Valor máximo excedido
+
+**Mensagem:** `Valor máximo permitido para geração de pagamentos é R$ 3000,00.`
+
+**Causa:** O campo `amount` é maior que 3000.
+
+**Solução:**
+
+```json
+// ❌ Errado
+{
+  "amount": 5000.00
+}
+
+// ✅ Correto
+{
+  "amount": 2999.99
+}
+```
+
+<Note>
+Para pagamentos acima de R$ 3.000,00, entre em contato com o suporte para aumentar o limite da sua loja.
+</Note>
+
+### Validação de campos
+
+**Mensagens comuns:**
+- `email must be an email`
+- `observation must be shorter than or equal to 2048 characters`
+- `webhookUrl must be a URL`
+
+**Causa:** Algum campo do body não passou na validação.
+
+**Exemplos de erros:**
+
+```json
+// ❌ Email inválido
+{
+  "email": "cliente@invalido"
+}
+
+// ❌ Observação muito longa
+{
+  "observation": "texto com mais de 2048 caracteres..."
+}
+
+// ❌ URL de webhook inválida
+{
+  "webhookUrl": "nao-e-uma-url"
+}
+```
+
+**Soluções:**
+
+```json
+// ✅ Correto
+{
+  "email": "cliente@example.com",
+  "observation": "Pedido #9876",
+  "webhookUrl": "https://example.com/webhook"
+}
+```
+
+## 404 Not Found
+
+### Pagamento não encontrado
+
+**Mensagem:** `Pagamento não encontrado.`
+
+**Causa:** O pagamento buscado por ID não existe ou não pertence à loja/token autenticado.
+
+**Solução:**
+- Verifique se o ID do pagamento está correto
+- Confirme que o pagamento pertence à sua loja
+- Use o token correto associado à loja que criou o pagamento
+
+```javascript
+// Exemplo de tratamento
+async function buscarPagamento(paymentId) {
+  try {
+    const response = await axios.get(
+      `${API_URL}/payments/${paymentId}`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      console.error('Pagamento não encontrado');
+      return null;
+    }
+    throw error;
+  }
+}
+```
+
+## Resumo de erros
+
+| Código | Mensagem | Causa |
+|--------|----------|-------|
+| 401 | Bearer token ausente. | Header `Authorization` não enviado |
+| 401 | Token inválido ou expirado. | Token errado, expirado ou desativado |
+| 403 | Loja inativa. | Loja associada ao token está desativada |
+| 400 | Valor mínimo permitido... | `amount` < 5 |
+| 400 | Valor máximo permitido... | `amount` > 3000 |
+| 400 | Mensagens de validação | Campos inválidos (email, url, tamanho, etc) |
+| 404 | Pagamento não encontrado. | ID não existe ou não pertence ao contexto |
+
+## Erros silenciosos
+
+Alguns erros não são retornados para o usuário da API, sendo apenas logados internamente:
+
+- **Falhas no envio de webhooks** - Se o webhook falhar, não há erro na resposta da API
+- **Problemas de integração interna** - Falhas com serviços externos (ex: Depix fora do ar)
+
+<Warning>
+Sempre implemente retry logic para webhooks e monitore logs para identificar falhas de entrega.
+</Warning>
+
+## Boas práticas de tratamento
+
+### 1. Sempre trate erros HTTP
+
+```javascript
+async function criarPagamento(data) {
+  try {
+    const response = await axios.post(`${API_URL}/payments`, data, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    return { success: true, data: response.data };
+  } catch (error) {
+    const status = error.response?.status;
+    const message = error.response?.data?.message;
+    
+    return {
+      success: false,
+      error: {
+        status,
+        message,
+        code: getErrorCode(status, message)
+      }
+    };
+  }
+}
+
+function getErrorCode(status, message) {
+  if (status === 401) return 'UNAUTHORIZED';
+  if (status === 403) return 'FORBIDDEN';
+  if (status === 404) return 'NOT_FOUND';
+  if (status === 400 && message?.includes('mínimo')) return 'AMOUNT_TOO_LOW';
+  if (status === 400 && message?.includes('máximo')) return 'AMOUNT_TOO_HIGH';
+  return 'VALIDATION_ERROR';
+}
+```
+
+### 2. Valide dados antes de enviar
+
+```javascript
+function validarPagamento(data) {
+  const errors = [];
+  
+  if (!data.amount || data.amount < 5) {
+    errors.push('Valor mínimo é R$ 5,00');
+  }
+  
+  if (data.amount > 3000) {
+    errors.push('Valor máximo é R$ 3.000,00');
+  }
+  
+  if (!data.email || !data.email.includes('@')) {
+    errors.push('Email inválido');
+  }
+  
+  if (data.observation && data.observation.length > 2048) {
+    errors.push('Observação muito longa (máx 2048 caracteres)');
+  }
+  
+  if (data.webhookUrl && !data.webhookUrl.startsWith('http')) {
+    errors.push('URL de webhook inválida');
+  }
+  
+  return errors;
+}
+
+// Uso
+const errors = validarPagamento(paymentData);
+if (errors.length > 0) {
+  console.error('Erros de validação:', errors);
+  return;
+}
+
+await criarPagamento(paymentData);
+```
+
+### 3. Implemente retry para erros temporários
+
+```javascript
+async function criarPagamentoComRetry(data, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await criarPagamento(data);
+    } catch (error) {
+      const status = error.response?.status;
+      
+      // Não fazer retry para erros de validação
+      if (status === 400 || status === 401 || status === 403 || status === 404) {
+        throw error;
+      }
+      
+      // Retry para erros 5xx (servidor)
+      if (status >= 500 && i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        continue;
+      }
+      
+      throw error;
+    }
+  }
+}
+```
+
+## Próximos passos
+
+- [Ver fluxo completo](/public-api/fluxo-completo) de integração
+- [Entender endpoints](/public-api/endpoints) disponíveis
+- [Configurar webhooks](/public-api/webhooks) para notificações
+- [Consultar limites](/public-api/limits) da API

@@ -1,0 +1,313 @@
+---
+title: Fluxo completo de pagamento
+description: Guia passo a passo para criar um pagamento, receber notificações e consultar status
+---
+
+Este guia mostra o fluxo completo de integração com a API Pública, desde a criação de um pagamento até o recebimento de notificações e consulta de status.
+
+## Visão geral do fluxo
+
+1. **Criar pagamento** - Enviar requisição POST para criar um novo pagamento
+2. **Receber resposta** - Obter ID do pagamento e URL de checkout
+3. **Cliente realiza pagamento** - Usuário completa o pagamento via Pix
+4. **Receber webhook** - Sua aplicação recebe notificação automática
+5. **Consultar status** - Verificar detalhes e status final do pagamento
+
+## Passo 1: Criar o pagamento
+
+Envie uma requisição POST para criar um novo pagamento:
+
+```bash
+curl -X POST https://public-api-prod.paguebit.com/public-api/v1/payments \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 150.0,
+    "email": "cliente@example.com",
+    "observation": "Pedido #9876",
+    "webhookUrl": "https://example.com/webhook"
+  }'
+```
+
+### Resposta
+
+```json
+{
+  "id": "pay_123",
+  "status": "pending",
+  "amount": 150.0,
+  "storeId": "store_abc",
+  "createdAt": "2025-12-16T15:00:00.000Z",
+  "webhookUrl": "https://example.com/webhook",
+  "observation": "Pedido #9876",
+  "email": "cliente@example.com",
+  "qrCodeUrl": "https://.../qrcode.png",
+  "qrCopyPaste": "000201010212...",
+  "isPublic": true
+}
+```
+
+<Note>
+Guarde o `id` do pagamento para consultas futuras. Use `qrCodeUrl` para exibir o QR Code ou `qrCopyPaste` para o cliente copiar o código Pix.
+</Note>
+
+## Passo 2: Cliente realiza o pagamento
+
+O cliente pode pagar de duas formas:
+
+- **Escanear o QR Code** - Exibir a imagem do `qrCodeUrl` para o cliente escanear
+- **Copiar o código Pix** - Usar o `qrCopyPaste` diretamente no app do banco
+
+Após o pagamento ser confirmado pela instituição financeira, o status muda automaticamente.
+
+### Gerar QR Code personalizado
+
+Você pode gerar um QR Code personalizado com sua própria marca usando o `qrCopyPaste`:
+
+```bash
+npm install qrcode.react
+```
+
+```jsx
+import { QRCodeSVG } from 'qrcode.react';
+
+function PaymentQRCode({ qrCopyPaste }) {
+  return (
+    <div className="qr-code-container">
+      <QRCodeSVG
+        value={qrCopyPaste}
+        size={256}
+        level="H"
+        includeMargin={true}
+        imageSettings={{
+          src: "/logo.png",
+          height: 48,
+          width: 48,
+          excavate: true,
+        }}
+      />
+      <p>Escaneie o QR Code para pagar</p>
+    </div>
+  );
+}
+```
+
+<Note>
+Use `qrcode.react` para gerar QR Codes personalizados com sua logo e cores da marca, mantendo a identidade visual da sua aplicação.
+</Note>
+
+## Passo 3: Receber notificação via webhook
+
+Se você configurou `webhookUrl` na criação do pagamento, receberá dois tipos de eventos:
+
+### Evento: payment.created
+
+Enviado imediatamente após a criação do pagamento:
+
+```json
+{
+  "event": "payment.created",
+  "id": "pay_123",
+  "status": "pending",
+  "amount": 150.0,
+  "storeId": "store_abc",
+  "createdAt": "2025-12-16T15:00:00.000Z",
+  "webhookUrl": "https://example.com/webhook",
+  "observation": "Pedido #9876",
+  "email": "cliente@example.com",
+  "qrCodeUrl": "https://.../qrcode.png",
+  "qrCopyPaste": "000201010212..."
+}
+```
+
+### Evento: payment.status_changed
+
+Enviado quando o status do pagamento muda (ex: de `pending` para `approved`):
+
+```json
+{
+  "event": "payment.status_changed",
+  "id": "pay_123",
+  "status": "approved",
+  "previousStatus": "pending",
+  "amount": 150.0,
+  "storeId": "store_abc",
+  "createdAt": "2025-12-16T15:00:00.000Z",
+  "webhookUrl": "https://example.com/webhook",
+  "observation": "Pedido #9876",
+  "email": "cliente@example.com",
+  "qrCodeUrl": "https://.../qrcode.png",
+  "qrCopyPaste": "000201010212..."
+}
+```
+
+### Processar webhooks
+
+Exemplo de endpoint para receber webhooks:
+
+```javascript
+app.post('/webhooks', (req, res) => {
+  const { event, id, status, previousStatus } = req.body;
+  
+  if (event === 'payment.created') {
+    console.log(`Pagamento ${id} criado com status ${status}`);
+  }
+  
+  if (event === 'payment.status_changed') {
+    console.log(`Pagamento ${id} mudou de ${previousStatus} para ${status}`);
+    
+    if (status === 'approved') {
+      // Liberar produto/serviço para o cliente
+      console.log('Pagamento aprovado! Liberando acesso...');
+    }
+  }
+  
+  res.status(200).send('OK');
+});
+```
+
+<Warning>
+Sempre retorne status 200 rapidamente. Processamento demorado deve ser feito de forma assíncrona.
+</Warning>
+
+## Passo 4: Consultar status do pagamento
+
+Você pode consultar o status atual de um pagamento a qualquer momento:
+
+```bash
+curl -X GET https://public-api-prod.paguebit.com/public-api/v1/payments/pay_123 \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+```
+
+### Resposta
+
+```json
+{
+  "id": "pay_123",
+  "status": "approved",
+  "amount": 150.0,
+  "storeId": "store_abc",
+  "createdAt": "2025-12-16T15:00:00.000Z",
+  "webhookUrl": "https://example.com/webhook",
+  "observation": "Pedido #9876",
+  "email": "cliente@example.com",
+  "qrCodeUrl": "https://.../qrcode.png",
+  "qrCopyPaste": "000201010212...",
+  "isPublic": true
+}
+```
+
+## Status possíveis
+
+| Status | Descrição |
+|--------|-----------|
+| `pending` | Aguardando pagamento ou processamento |
+| `approved` | Pago e aprovado - **valor confirmado e disponível** |
+| `review` | Em análise - **não significa aprovação** |
+| `not_approved` | Não aprovado (erro, cancelamento ou expiração) |
+| `paid` | Consolidado (uso interno) |
+| `withdrawal_processing` | Em processamento de saque (uso interno) |
+| `receipt_sent` | Comprovante enviado (uso interno) |
+| `rejected` | Rejeitado (uso interno) |
+
+<Warning>
+**Atenção:** Somente o status `approved` indica que o valor foi confirmado e está disponível. Pagamentos em `review` por mais de 30 minutos são automaticamente reembolsados.
+</Warning>
+
+Veja mais detalhes sobre cada status na [página de Status de pagamentos](/public-api/status).
+
+## Tratamento de erros
+
+A API retorna códigos HTTP padrão para indicar sucesso ou falha:
+
+- **200** - Requisição bem-sucedida
+- **400** - Erro de validação nos dados enviados
+- **401** - Token ausente ou inválido
+- **403** - Loja inativa
+- **404** - Pagamento não encontrado
+
+Veja todos os erros possíveis e como tratá-los na [página de Erros](/public-api/errors).
+
+## Próximos passos
+
+- [Ver webhooks](/public-api/webhooks) para entender os eventos disponíveis
+- [Consultar limites](/public-api/limits) da API para planejar sua integração
+- [Ver todos os endpoints](/public-api/endpoints) disponíveis na API
+- [Entender status](/public-api/status) de pagamentos em detalhes
+
+## Exemplo completo em Node.js
+
+```javascript
+const axios = require('axios');
+
+const API_URL = 'https://public-api-prod.paguebit.com/public-api/v1';
+const API_TOKEN = process.env.API_TOKEN;
+
+async function criarPagamento() {
+  try {
+    // 1. Criar pagamento
+    const response = await axios.post(
+      `${API_URL}/payments`,
+      {
+        amount: 150.0,
+        email: 'cliente@example.com',
+        observation: 'Pedido #9876',
+        webhookUrl: 'https://example.com/webhook'
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${API_TOKEN}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    const payment = response.data;
+    console.log('Pagamento criado:', payment.id);
+    console.log('QR Code URL:', payment.qrCodeUrl);
+    console.log('Pix Copia e Cola:', payment.qrCopyPaste);
+    
+    // 2. Aguardar webhook ou consultar status periodicamente
+    await aguardarPagamento(payment.id);
+    
+  } catch (error) {
+    console.error('Erro ao criar pagamento:', error.response?.data || error.message);
+  }
+}
+
+async function aguardarPagamento(paymentId) {
+  const maxTentativas = 30; // 5 minutos (10s * 30)
+  
+  for (let i = 0; i < maxTentativas; i++) {
+    await new Promise(resolve => setTimeout(resolve, 10000)); // Aguardar 10s
+    
+    const response = await axios.get(
+      `${API_URL}/payments/${paymentId}`,
+      {
+        headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+      }
+    );
+    
+    const status = response.data.status;
+    console.log(`Status atual: ${status}`);
+    
+    if (status === 'approved') {
+      console.log('Pagamento aprovado!');
+      return;
+    }
+    
+    if (status === 'expired' || status === 'cancelled') {
+      console.log('Pagamento não foi completado');
+      return;
+    }
+  }
+  
+  console.log('Timeout: pagamento ainda pendente');
+}
+
+criarPagamento();
+```
+
+<Note>
+Este exemplo usa polling para verificar o status. Em produção, use webhooks para receber notificações em tempo real.
+</Note>
