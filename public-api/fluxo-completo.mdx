@@ -1,0 +1,259 @@
+---
+title: Fluxo completo de pagamento
+description: Guia passo a passo para criar um pagamento, receber notificações e consultar status
+---
+
+Este guia mostra o fluxo completo de integração com a API Pública, desde a criação de um pagamento até o recebimento de notificações e consulta de status.
+
+## Visão geral do fluxo
+
+1. **Criar pagamento** - Enviar requisição POST para criar um novo pagamento
+2. **Receber resposta** - Obter ID do pagamento e URL de checkout
+3. **Cliente realiza pagamento** - Usuário completa o pagamento via Pix
+4. **Receber webhook** - Sua aplicação recebe notificação automática
+5. **Consultar status** - Verificar detalhes e status final do pagamento
+
+## Passo 1: Criar o pagamento
+
+Envie uma requisição POST para criar um novo pagamento:
+
+```bash
+curl -X POST https://api.exemplo.com/v1/payments \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 10000,
+    "description": "Pagamento de teste",
+    "customer": {
+      "name": "João Silva",
+      "email": "joao@exemplo.com",
+      "document": "12345678900"
+    }
+  }'
+```
+
+### Resposta
+
+```json
+{
+  "id": "pay_abc123xyz",
+  "status": "pending",
+  "amount": 10000,
+  "checkout_url": "https://checkout.exemplo.com/pay_abc123xyz",
+  "pix_code": "00020126580014br.gov.bcb.pix...",
+  "created_at": "2025-12-17T17:50:00Z"
+}
+```
+
+<Note>
+Guarde o `id` do pagamento para consultas futuras e envie o `checkout_url` ou `pix_code` para seu cliente.
+</Note>
+
+## Passo 2: Cliente realiza o pagamento
+
+O cliente pode pagar de duas formas:
+
+- **Acessar o checkout_url** - Interface completa com QR Code e instruções
+- **Copiar o pix_code** - Usar diretamente no app do banco
+
+Após o pagamento ser confirmado pela instituição financeira, o status muda automaticamente.
+
+## Passo 3: Receber notificação via webhook
+
+Quando o status do pagamento mudar, você receberá um webhook no endpoint configurado:
+
+```json
+{
+  "event": "payment.paid",
+  "data": {
+    "id": "pay_abc123xyz",
+    "status": "paid",
+    "amount": 10000,
+    "paid_at": "2025-12-17T17:52:30Z"
+  }
+}
+```
+
+### Validar o webhook
+
+Sempre valide a assinatura do webhook para garantir autenticidade:
+
+```javascript
+const crypto = require('crypto');
+
+function validateWebhook(payload, signature, secret) {
+  const hash = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+  
+  return hash === signature;
+}
+
+// No seu endpoint
+app.post('/webhooks', (req, res) => {
+  const signature = req.headers['x-webhook-signature'];
+  
+  if (!validateWebhook(req.body, signature, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).send('Invalid signature');
+  }
+  
+  // Processar o evento
+  const { event, data } = req.body;
+  
+  if (event === 'payment.paid') {
+    console.log(`Pagamento ${data.id} foi pago!`);
+    // Liberar produto/serviço para o cliente
+  }
+  
+  res.status(200).send('OK');
+});
+```
+
+<Warning>
+Sempre retorne status 200 rapidamente. Processamento demorado deve ser feito de forma assíncrona.
+</Warning>
+
+## Passo 4: Consultar status do pagamento
+
+Você pode consultar o status atual de um pagamento a qualquer momento:
+
+```bash
+curl -X GET https://api.exemplo.com/v1/payments/pay_abc123xyz \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI"
+```
+
+### Resposta
+
+```json
+{
+  "id": "pay_abc123xyz",
+  "status": "paid",
+  "amount": 10000,
+  "description": "Pagamento de teste",
+  "customer": {
+    "name": "João Silva",
+    "email": "joao@exemplo.com"
+  },
+  "created_at": "2025-12-17T17:50:00Z",
+  "paid_at": "2025-12-17T17:52:30Z"
+}
+```
+
+## Status possíveis
+
+| Status | Descrição |
+|--------|-----------|
+| `pending` | Aguardando pagamento |
+| `paid` | Pagamento confirmado |
+| `expired` | Pagamento expirou (após 24h) |
+| `cancelled` | Pagamento cancelado manualmente |
+| `refunded` | Pagamento estornado |
+
+Veja mais detalhes sobre cada status na [página de Status de pagamentos](/public-api/status).
+
+## Fluxo de erro
+
+Se houver erro na criação do pagamento, você receberá uma resposta com código de erro:
+
+```json
+{
+  "error": {
+    "code": "invalid_amount",
+    "message": "O valor deve ser maior que R$ 1,00"
+  }
+}
+```
+
+### Códigos de erro comuns
+
+- `invalid_amount` - Valor inválido ou fora dos limites
+- `invalid_customer` - Dados do cliente incompletos ou inválidos
+- `rate_limit_exceeded` - Limite de requisições excedido
+- `unauthorized` - Token de autenticação inválido
+
+## Próximos passos
+
+- [Configurar webhooks](/webhooks/overview) para receber notificações automáticas
+- [Entender eventos](/webhooks/events) disponíveis para cada mudança de status
+- [Consultar limites](/public-api/limits) da API para planejar sua integração
+- [Ver todos os endpoints](/public-api/endpoints) disponíveis na API
+
+## Exemplo completo em Node.js
+
+```javascript
+const axios = require('axios');
+
+const API_URL = 'https://api.exemplo.com/v1';
+const API_TOKEN = process.env.API_TOKEN;
+
+async function criarPagamento() {
+  try {
+    // 1. Criar pagamento
+    const response = await axios.post(
+      `${API_URL}/payments`,
+      {
+        amount: 10000,
+        description: 'Pagamento de teste',
+        customer: {
+          name: 'João Silva',
+          email: 'joao@exemplo.com',
+          document: '12345678900'
+        }
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${API_TOKEN}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    const payment = response.data;
+    console.log('Pagamento criado:', payment.id);
+    console.log('URL de checkout:', payment.checkout_url);
+    
+    // 2. Aguardar webhook ou consultar status periodicamente
+    await aguardarPagamento(payment.id);
+    
+  } catch (error) {
+    console.error('Erro ao criar pagamento:', error.response?.data || error.message);
+  }
+}
+
+async function aguardarPagamento(paymentId) {
+  const maxTentativas = 30; // 5 minutos (10s * 30)
+  
+  for (let i = 0; i < maxTentativas; i++) {
+    await new Promise(resolve => setTimeout(resolve, 10000)); // Aguardar 10s
+    
+    const response = await axios.get(
+      `${API_URL}/payments/${paymentId}`,
+      {
+        headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+      }
+    );
+    
+    const status = response.data.status;
+    console.log(`Status atual: ${status}`);
+    
+    if (status === 'paid') {
+      console.log('Pagamento confirmado!');
+      return;
+    }
+    
+    if (status === 'expired' || status === 'cancelled') {
+      console.log('Pagamento não foi completado');
+      return;
+    }
+  }
+  
+  console.log('Timeout: pagamento ainda pendente');
+}
+
+criarPagamento();
+```
+
+<Note>
+Este exemplo usa polling para verificar o status. Em produção, use webhooks para receber notificações em tempo real.
+</Note>
