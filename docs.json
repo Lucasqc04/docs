@@ -44,7 +44,6 @@
         "icon": "terminal",
         "pages": [
           "index",
-          "public-api/introduction",
           "public-api/authentication",
           "public-api/limits"
         ]
