@@ -37,39 +37,25 @@
       "prefill": true
     }
   },
- "navigation": {
-  "dropdowns": [
-    {
-      "dropdown": "Início",
-      "icon": "home",
-      "pages": ["index"]
-    },
-    {
-      "dropdown": "API Pública",
-      "icon": "terminal",
-      "groups": [
-        {
-          "group": "Introdução",
-          "pages": ["public-api/introduction"]
-        },
-        {
-          "group": "Autenticação",
-          "pages": ["public-api/authentication"]
-        },
-        {
-          "group": "Limites",
-          "pages": ["public-api/limits"]
-        },
-        {
-          "group": "Endpoints",
-          "openapi": "openapi.json"
-        },
-        {
-          "group": "Webhooks",
-          "pages": ["public-api/webhooks"]
-        }
-      ]
-    }
-  ]
-}
+  "navigation": {
+    "groups": [
+      {
+        "group": "API Pública",
+        "icon": "terminal",
+        "pages": [
+          "index",
+          "public-api/authentication",
+          "public-api/limits"
+        ]
+      },
+      {
+        "group": "Endpoints",
+        "openapi": "openapi.json"
+      },
+      {
+        "group": "Webhooks",
+        "pages": ["public-api/webhooks"]
+      }
+    ]
+  }
 }
