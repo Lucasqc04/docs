@@ -1,5 +1,5 @@
 ---
-title: Status dos Pagamentos
+title: "Status dos Pagamentos"
 ---
 
 ## Status possíveis
@@ -7,10 +7,19 @@ title: Status dos Pagamentos
 - `pending`: aguardando pagamento ou processamento
 - `approved`: pago e aprovado
 - `review`: em análise
-- `not_approved`: não aprovado (erro, cancelamento, expirado)
-- `paid`: consolidado (interno)
-- `withdrawal_processing`: em processamento de saque (interno)
-- `receipt_sent`: comprovante enviado (interno)
-- `rejected`: rejeitado (interno)
+- `not_approved`: não aprovado (erro, cancelamento ou expiração)
+- `paid`: consolidado (uso interno)
+- `withdrawal_processing`: em processamento de saque (uso interno)
+- `receipt_sent`: comprovante enviado (uso interno)
+- `rejected`: rejeitado (uso interno)
 
-Obs.: a API pública geralmente usa `pending`, `approved`, `review`, `not_approved`.
+---
+
+## ⚠️ Atenções importantes
+
+- O status **`review (em análise) não significa que o pagamento foi aprovado`**.
+- Pagamentos que permanecem **`em análise (review) por mais de 30 minutos`** são **automaticamente reembolsados ao pagador**.
+- **`Somente o status approved indica que o valor foi confirmado e que o saldo está disponível para uso`**.
+
+> **Resumo:**\
+> Se o pagamento **`não estiver como approved`**, o valor **não deve ser considerado disponível**.
