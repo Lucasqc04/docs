@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "https://api.paguebit.com"
+      "url": "https://public-api-prod.paguebit.com"
     }
   ],
   "components": {
