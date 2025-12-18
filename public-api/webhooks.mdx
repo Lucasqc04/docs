@@ -36,6 +36,10 @@ signed_payload = "{timestamp}.{raw_body}"
 signature = HMAC_SHA256(webhookSecret, signed_payload)
 ```
 
+<Warning>
+A assinatura do webhook é gerada a partir do **corpo bruto (raw body)** da requisição, exatamente como enviado no POST, concatenado com o timestamp no formato `{timestamp}.{raw_body}`. Não faça `JSON.parse` + `JSON.stringify` no corpo antes de validar, pois isso pode alterar a formatação e invalidar a assinatura.
+</Warning>
+
 ### Validando a assinatura
 
 Para validar a assinatura, calcule o HMAC-SHA256 do payload assinado com o seu `webhookSecret` e compare com o valor do header `X-Paguebit-Signature`.
