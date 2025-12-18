@@ -6,28 +6,49 @@ Se o pagamento for criado com `webhookUrl`, a API envia webhooks:
 - `payment.created`: enviado após criação do pagamento.
 - `payment.status_changed`: enviado em transições de status do pagamento.
 
+## Eventos suportados
+
+A API envia webhooks para os seguintes eventos:
+
+- **`payment.created`**: enviado após a criação do pagamento
+- **`payment.status_changed`**: enviado em transições de status do pagamento
+
 ## Assinatura digital de webhooks
 
 Todos os webhooks enviados pela API pública são assinados digitalmente para garantir autenticidade e integridade das notificações.
 
+### Headers enviados
+
+Cada webhook inclui os seguintes headers HTTP:
+
+| Header | Descrição |
+|--------|-----------|
+| `X-Paguebit-Signature` | Assinatura HMAC-SHA256 do payload |
+| `X-Paguebit-Timestamp` | Timestamp Unix da requisição |
+| `X-Paguebit-Event-Id` | ID único do evento |
+
 ### Como funciona
 
-Ao criar um novo token de API pública, você recebe um **webhookSecret** exclusivo. Todos os webhooks enviados para a URL cadastrada conterão um header HTTP chamado `x-webhook-signature`.
+O `webhookSecret` é configurado por loja ao criar um token de API pública. A assinatura é gerada no seguinte formato:
 
-O valor desse header é um **HMAC-SHA256** do corpo bruto do POST, usando o seu `webhookSecret` como chave.
+```
+signed_payload = "{timestamp}.{raw_body}"
+signature = HMAC_SHA256(webhookSecret, signed_payload)
+```
 
 ### Validando a assinatura
 
-Para validar a assinatura, calcule o HMAC-SHA256 do corpo recebido com o seu `webhookSecret` e compare com o valor do header `x-webhook-signature`.
+Para validar a assinatura, calcule o HMAC-SHA256 do payload assinado com o seu `webhookSecret` e compare com o valor do header `X-Paguebit-Signature`.
 
 Exemplo em Node.js:
 
 ```javascript
 const crypto = require('crypto');
 
-function validateWebhookSignature(body, signature, secret) {
+function validateWebhookSignature(body, timestamp, signature, secret) {
+  const signedPayload = `${timestamp}.${body}`;
   const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(body);
+  hmac.update(signedPayload);
   const calculatedSignature = hmac.digest('hex');
   
   return calculatedSignature === signature;
@@ -35,10 +56,11 @@ function validateWebhookSignature(body, signature, secret) {
 
 // No seu endpoint de webhook
 app.post('/webhook', (req, res) => {
-  const signature = req.headers['x-webhook-signature'];
+  const signature = req.headers['x-paguebit-signature'];
+  const timestamp = req.headers['x-paguebit-timestamp'];
   const body = JSON.stringify(req.body);
   
-  if (!validateWebhookSignature(body, signature, process.env.WEBHOOK_SECRET)) {
+  if (!validateWebhookSignature(body, timestamp, signature, process.env.WEBHOOK_SECRET)) {
     return res.status(401).send('Invalid signature');
   }
   
