@@ -6,7 +6,53 @@ Se o pagamento for criado com `webhookUrl`, a API envia webhooks:
 - `payment.created`: enviado após criação do pagamento.
 - `payment.status_changed`: enviado em transições de status do pagamento.
 
-## Eventos suportados
+
+## Assinatura digital de webhooks
+
+Todos os webhooks enviados pela API pública são assinados digitalmente para garantir autenticidade e integridade das notificações.
+
+### Como funciona
+
+Ao criar um novo token de API pública, você recebe um **webhookSecret** exclusivo. Todos os webhooks enviados para a URL cadastrada conterão um header HTTP chamado `x-webhook-signature`.
+
+O valor desse header é um **HMAC-SHA256** do corpo bruto do POST, usando o seu `webhookSecret` como chave.
+
+### Validando a assinatura
+
+Para validar a assinatura, calcule o HMAC-SHA256 do corpo recebido com o seu `webhookSecret` e compare com o valor do header `x-webhook-signature`.
+
+Exemplo em Node.js:
+
+```javascript
+const crypto = require('crypto');
+
+function validateWebhookSignature(body, signature, secret) {
+  const hmac = crypto.createHmac('sha256', secret);
+  hmac.update(body);
+  const calculatedSignature = hmac.digest('hex');
+  
+  return calculatedSignature === signature;
+}
+
+// No seu endpoint de webhook
+app.post('/webhook', (req, res) => {
+  const signature = req.headers['x-webhook-signature'];
+  const body = JSON.stringify(req.body);
+  
+  if (!validateWebhookSignature(body, signature, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).send('Invalid signature');
+  }
+  
+  // Processar webhook legítimo
+  console.log('Webhook válido:', req.body);
+  res.status(200).send('OK');
+});
+```
+
+<Warning>
+Implemente a validação da assinatura em seu endpoint de webhook para garantir que só processa notificações legítimas.
+</Warning>
+
 
 A API envia webhooks para os seguintes eventos:
 
