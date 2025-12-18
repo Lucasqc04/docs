@@ -5,3 +5,13 @@ title: Autenticação
 - **Tipo**: Bearer Token
 - **Header**: `Authorization: Bearer <token>`
 - O token é vinculado a uma loja, assim todos os pagamentos vão para a mesma.
+
+## Webhook Secret
+
+Ao criar um novo token de API pública, você recebe também um **webhookSecret** exclusivo. Este secret é usado para assinar digitalmente todos os webhooks enviados pela API, garantindo autenticidade e integridade das notificações.
+
+<Warning>
+Guarde o webhookSecret gerado ao criar o token, pois ele não será mostrado novamente.
+</Warning>
+
+Para mais detalhes sobre como validar a assinatura dos webhooks, consulte a seção [Webhooks](/public-api/webhooks).
