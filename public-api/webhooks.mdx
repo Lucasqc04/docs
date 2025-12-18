@@ -74,29 +74,33 @@ app.post('/webhook', (req, res) => {
 Implemente a validação da assinatura em seu endpoint de webhook para garantir que só processa notificações legítimas.
 </Warning>
 
-
-### Payload de Webhook
+## Payload de webhook
 
 Campos enviados em ambos os eventos:
 
 | Campo         | Tipo     | Descrição                                  |
-|---------------|----------|--------------------------------------------|
+|---------------|----------|-------------------------------------------|
+| `event`       | string   | Tipo do evento (`payment.created` ou `payment.status_changed`) |
 | `id`          | string   | ID do pagamento                            |
 | `status`      | string   | Status atual do pagamento                  |
 | `amount`      | number   | Valor do pagamento (BRL)                   |
 | `storeId`     | string   | ID da loja                                 |
 | `createdAt`   | string   | ISO datetime de criação                    |
-| `webhookUrl`  | string?  | URL configurada para o webhook (se houver) |
-| `observation` | string?  | Observação do pagamento                    |
 | `email`       | string   | E‑mail associado ao pagamento              |
+| `observation` | string?  | Observação do pagamento                    |
 | `qrCodeUrl`   | string?  | URL do QR Code                             |
 | `qrCopyPaste` | string?  | Conteúdo do QR Copia e Cola                |
+| `isPublic`    | boolean  | Indica se o pagamento é público            |
 
 Campo adicional em `payment.status_changed`:
 
 | Campo            | Tipo   | Descrição                 |
 |------------------|--------|---------------------------|
-| `previousStatus` | string | Status anterior do pago   |
+| `previousStatus` | string | Status anterior do pagamento |
+
+<Note>
+O campo `webhookUrl` não é incluído no payload dos webhooks, pois o webhook é uma notificação e não um espelhamento do endpoint GET. O `webhookUrl` continua disponível nos endpoints de leitura (GET).
+</Note>
 
 Exemplo `payment.created`:
 
@@ -108,11 +112,11 @@ Exemplo `payment.created`:
   "amount": 150.0,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
-  "webhookUrl": "https://example.com/webhook",
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
   "qrCodeUrl": "https://.../qrcode.png",
-  "qrCopyPaste": "000201010212..."
+  "qrCopyPaste": "000201010212...",
+  "isPublic": true
 }
 ```
 
@@ -127,10 +131,19 @@ Exemplo `payment.status_changed`:
   "amount": 150.0,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
-  "webhookUrl": "https://example.com/webhook",
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
   "qrCodeUrl": "https://.../qrcode.png",
-  "qrCopyPaste": "000201010212..."
+  "qrCopyPaste": "000201010212...",
+  "isPublic": true
 }
 ```
+
+## Testando webhooks
+
+Para testar a integração de webhooks, recomendamos o uso das seguintes ferramentas:
+
+- **[webhook.site](https://webhook.site)**: Gera URLs temporárias para inspecionar webhooks recebidos
+- **[ngrok](https://ngrok.com)**: Cria túneis seguros para testar webhooks localmente
+
+Essas ferramentas permitem visualizar os headers, payload e validar a assinatura dos webhooks antes de implementar em produção.
