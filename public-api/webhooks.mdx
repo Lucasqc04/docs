@@ -2,165 +2,181 @@
 title: Webhooks
 ---
 
-Se o pagamento for criado com `webhookUrl`, a API envia webhooks:
-- `payment.created`: enviado após criação do pagamento.
-- `payment.status_changed`: enviado em transições de status do pagamento.
+Se um pagamento for criado com `webhookUrl`, a API enviará notificações HTTP (webhooks) para os seguintes eventos:
 
+* **`payment.created`** — enviado após a criação do pagamento
+* **`payment.status_changed`** — enviado quando o status do pagamento muda
 
-## Assinatura digital de webhooks
-
-Todos os webhooks enviados pela API pública são assinados digitalmente para garantir autenticidade e integridade das notificações.
-
-### Como funciona
-
-Ao criar um novo token de API pública, você recebe um **webhookSecret** exclusivo. Todos os webhooks enviados para a URL cadastrada conterão um header HTTP chamado `x-webhook-signature`.
-
-O valor desse header é um **HMAC-SHA256** do corpo bruto do POST, usando o seu `webhookSecret` como chave.
-
-### Validando a assinatura
-
-Para validar a assinatura, calcule o HMAC-SHA256 do corpo recebido com o seu `webhookSecret` e compare com o valor do header `x-webhook-signature`.
-
-Exemplo em Node.js:
-
-```javascript
-const crypto = require('crypto');
-
-function validateWebhookSignature(body, signature, secret) {
-  const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(body);
-  const calculatedSignature = hmac.digest('hex');
-  
-  return calculatedSignature === signature;
-}
-
-// No seu endpoint de webhook
-app.post('/webhook', (req, res) => {
-  const signature = req.headers['x-webhook-signature'];
-  const body = JSON.stringify(req.body);
-  
-  if (!validateWebhookSignature(body, signature, process.env.WEBHOOK_SECRET)) {
-    return res.status(401).send('Invalid signature');
-  }
-  
-  // Processar webhook legítimo
-  console.log('Webhook válido:', req.body);
-  res.status(200).send('OK');
-});
-```
-
-<Warning>
-Implemente a validação da assinatura em seu endpoint de webhook para garantir que só processa notificações legítimas.
-</Warning>
-
-
-A API envia webhooks para os seguintes eventos:
-
-- **`payment.created`**: enviado após a criação do pagamento
-- **`payment.status_changed`**: enviado em transições de status do pagamento
+---
 
 ## Assinatura digital de webhooks
 
-Todos os webhooks enviados pela API pública são assinados digitalmente para garantir autenticidade e integridade das notificações.
+Todos os webhooks enviados pela API pública são assinados digitalmente para garantir:
 
-### Headers enviados
+* **Autenticidade** (o webhook foi realmente enviado pela Paguebit)
+* **Integridade** (o payload não foi alterado)
+* **Proteção contra replay attacks**
+
+---
+
+## Headers enviados
 
 Cada webhook inclui os seguintes headers HTTP:
 
-| Header | Descrição |
-|--------|-----------|
+| Header                 | Descrição                         |
+| ---------------------- | --------------------------------- |
 | `X-Paguebit-Signature` | Assinatura HMAC-SHA256 do payload |
-| `X-Paguebit-Timestamp` | Timestamp Unix da requisição |
-| `X-Paguebit-Event-Id` | ID único do evento |
+| `X-Paguebit-Timestamp` | Timestamp Unix (segundos)         |
+| `X-Paguebit-Event-Id`  | ID único do evento                |
 
-### Como funciona
+> **Observação:** headers HTTP são *case-insensitive*.
+> `X-Paguebit-Signature` e `x-paguebit-signature` são equivalentes.
 
-O `webhookSecret` é configurado por loja ao criar um token de API pública. A assinatura é gerada no seguinte formato:
+---
+
+## Como funciona a assinatura
+
+Ao criar um token de API pública, você recebe um **`webhookSecret`** exclusivo.
+
+A cada webhook enviado, a API:
+
+1. Obtém o **corpo bruto (raw body)** da requisição
+2. Concatena o timestamp no formato:
+
+   ```
+   {timestamp}.{rawBody}
+   ```
+3. Gera uma assinatura usando **HMAC-SHA256**
+4. Envia o resultado no header `X-Paguebit-Signature` (hexadecimal)
+
+### Formato matemático
 
 ```
-signed_payload = "{timestamp}.{raw_body}"
+signed_payload = "{timestamp}.{rawBody}"
 signature = HMAC_SHA256(webhookSecret, signed_payload)
 ```
 
-<Warning>
-A assinatura do webhook é gerada a partir do **corpo bruto (raw body)** da requisição, exatamente como enviado no POST, concatenado com o timestamp no formato `{timestamp}.{raw_body}`. Não faça `JSON.parse` + `JSON.stringify` no corpo antes de validar, pois isso pode alterar a formatação e invalidar a assinatura.
-</Warning>
+---
 
-### Validando a assinatura
+## Validando a assinatura
 
-Para validar a assinatura, calcule o HMAC-SHA256 do payload assinado com o seu `webhookSecret` e compare com o valor do header `X-Paguebit-Signature`.
+Para validar um webhook recebido:
 
-Exemplo em Node.js:
+1. Leia os headers:
 
-```javascript
-const crypto = require('crypto');
+   * `X-Paguebit-Signature`
+   * `X-Paguebit-Timestamp`
+2. Obtenha o **corpo bruto da requisição**
+3. Gere a assinatura localmente usando o mesmo algoritmo
+4. Compare as assinaturas usando comparação segura
 
-function validateWebhookSignature(body, timestamp, signature, secret) {
-  const signedPayload = `${timestamp}.${body}`;
-  const hmac = crypto.createHmac('sha256', secret);
-  hmac.update(signedPayload);
-  const calculatedSignature = hmac.digest('hex');
-  
-  return calculatedSignature === signature;
+---
+
+### Exemplo em Node.js (Express)
+
+```ts
+import crypto from 'crypto';
+import express from 'express';
+
+function validateWebhookSignature(
+  rawBody: string,
+  timestamp: string,
+  signature: string,
+  webhookSecret: string,
+): boolean {
+  const signedPayload = `${timestamp}.${rawBody}`;
+
+  const expectedSignature = crypto
+    .createHmac('sha256', webhookSecret)
+    .update(signedPayload)
+    .digest('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature, 'hex'),
+    Buffer.from(expectedSignature, 'hex'),
+  );
 }
 
-// No seu endpoint de webhook
-app.post('/webhook', express.raw({type: 'application/json'}), (req, res) => {
-  const signature = req.headers['x-paguebit-signature'];
-  const timestamp = req.headers['x-paguebit-timestamp'];
-  const rawBody = req.body.toString('utf8'); // Use o raw body
-  
-  if (!validateWebhookSignature(rawBody, timestamp, signature, process.env.WEBHOOK_SECRET)) {
-    return res.status(401).send('Invalid signature');
-  }
-  
-  // Processar webhook legítimo
-  const payload = JSON.parse(rawBody);
-  console.log('Webhook válido:', payload);
-  res.status(200).send('OK');
-});
+const app = express();
+
+app.post(
+  '/webhook',
+  express.raw({ type: 'application/json' }),
+  (req, res) => {
+    const signature = req.headers['x-paguebit-signature'] as string;
+    const timestamp = req.headers['x-paguebit-timestamp'] as string;
+    const rawBody = req.body.toString('utf8');
+
+    if (!signature || !timestamp) {
+      return res.status(400).send('Missing webhook headers');
+    }
+
+    const isValid = validateWebhookSignature(
+      rawBody,
+      timestamp,
+      signature,
+      process.env.WEBHOOK_SECRET!,
+    );
+
+    if (!isValid) {
+      return res.status(401).send('Invalid signature');
+    }
+
+    const payload = JSON.parse(rawBody);
+    console.log('Webhook válido:', payload);
+
+    res.status(200).send('OK');
+  },
+);
 ```
 
+---
+
 <Warning>
-Implemente a validação da assinatura em seu endpoint de webhook para garantir que só processa notificações legítimas.
+A validação **deve ser feita antes** de qualquer processamento do payload.
 </Warning>
 
-## Payload de webhook
+<Warning>
+O `rawBody` deve ser usado **exatamente como recebido**.  
+Não faça `JSON.parse` + `JSON.stringify` antes de validar, pois isso altera o conteúdo e invalida a assinatura.
+</Warning>
 
-Campos enviados em ambos os eventos:
+---
 
-| Campo         | Tipo     | Descrição                                  |
-|---------------|----------|-------------------------------------------|
-| `event`       | string   | Tipo do evento (`payment.created` ou `payment.status_changed`) |
-| `id`          | string   | ID do pagamento                            |
-| `status`      | string   | Status atual do pagamento                  |
-| `amount`      | number   | Valor do pagamento (BRL)                   |
-| `storeId`     | string   | ID da loja                                 |
-| `createdAt`   | string   | ISO datetime de criação                    |
-| `email`       | string   | E‑mail associado ao pagamento              |
-| `observation` | string?  | Observação do pagamento                    |
-| `qrCodeUrl`   | string?  | URL do QR Code                             |
-| `qrCopyPaste` | string?  | Conteúdo do QR Copia e Cola                |
-| `isPublic`    | boolean  | Indica se o pagamento é público            |
+## Payload do webhook
 
-Campo adicional em `payment.status_changed`:
+Campos enviados em **todos os eventos**:
 
-| Campo            | Tipo   | Descrição                 |
-|------------------|--------|---------------------------|
-| `previousStatus` | string | Status anterior do pagamento |
+| Campo         | Tipo    | Descrição                       |
+| ------------- | ------- | ------------------------------- |
+| `event`       | string  | Tipo do evento                  |
+| `id`          | string  | ID do pagamento                 |
+| `status`      | string  | Status atual                    |
+| `amount`      | number  | Valor do pagamento (BRL)        |
+| `storeId`     | string  | ID da loja                      |
+| `createdAt`   | string  | Data ISO de criação             |
+| `email`       | string  | E-mail do pagamento             |
+| `observation` | string? | Observação                      |
+| `qrCodeUrl`   | string? | URL do QR Code                  |
+| `qrCopyPaste` | string? | QR Copia e Cola                 |
+| `isPublic`    | boolean | Indica se o pagamento é público |
 
-<Note>
-O campo `webhookUrl` não é incluído no payload dos webhooks, pois o webhook é uma notificação e não um espelhamento do endpoint GET. O `webhookUrl` continua disponível nos endpoints de leitura (GET).
-</Note>
+### Campo adicional em `payment.status_changed`
 
-Exemplo `payment.created`:
+| Campo            | Tipo   | Descrição       |
+| ---------------- | ------ | --------------- |
+| `previousStatus` | string | Status anterior |
+
+---
+
+### Exemplo — `payment.created`
 
 ```json
 {
   "event": "payment.created",
   "id": "pay_123",
   "status": "pending",
-  "amount": 150.0,
+  "amount": 150,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
   "observation": "Pedido #9876",
@@ -171,7 +187,7 @@ Exemplo `payment.created`:
 }
 ```
 
-Exemplo `payment.status_changed`:
+### Exemplo — `payment.status_changed`
 
 ```json
 {
@@ -179,7 +195,7 @@ Exemplo `payment.status_changed`:
   "id": "pay_123",
   "status": "approved",
   "previousStatus": "pending",
-  "amount": 150.0,
+  "amount": 150,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
   "observation": "Pedido #9876",
@@ -190,11 +206,28 @@ Exemplo `payment.status_changed`:
 }
 ```
 
+---
+
 ## Testando webhooks
 
-Para testar a integração de webhooks, recomendamos o uso das seguintes ferramentas:
+Ferramentas recomendadas:
 
-- **[webhook.site](https://webhook.site)**: Gera URLs temporárias para inspecionar webhooks recebidos
-- **[ngrok](https://ngrok.com)**: Cria túneis seguros para testar webhooks localmente
+* **[https://webhook.site](https://webhook.site)** — inspecionar headers e payloads
+* **[https://ngrok.com](https://ngrok.com)** — testar webhooks localmente
 
-Essas ferramentas permitem visualizar os headers, payload e validar a assinatura dos webhooks antes de implementar em produção.
+Essas ferramentas permitem validar rapidamente a assinatura antes de ir para produção.
+
+---
+
+## Resumo rápido
+
+| Item                   | Valor                   |
+| ---------------------- | ----------------------- |
+| Algoritmo              | HMAC-SHA256             |
+| Header da assinatura   | `X-Paguebit-Signature`  |
+| Header do timestamp    | `X-Paguebit-Timestamp`  |
+| Payload assinado       | `{timestamp}.{rawBody}` |
+| Encoding               | Hexadecimal             |
+| Proteção contra replay | ✅                       |
+
+---
