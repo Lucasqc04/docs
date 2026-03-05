@@ -1,20 +1,14 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "maple",
-  "name": "PagueBit API Docs",
+  "name": "Dominipay API Docs",
   "colors": {
-    "primary": "#FF6B00",
-    "light": "#FF6B00",
-    "dark": "#FF6B00"
+    "primary": "#500E18",
+    "light": "#500E18",
+    "dark": "#500E18"
   },
-  "logo": {
-    "light": "/logo_completa.png",
-    "dark": "/logo_completa.png"
-  },
-  "favicon": {
-    "light": "/logo.png",
-    "dark": "/logo.png"
-  },
+  "logo": "/images/logo.png",
+  "favicon": "/images/logo.png",
   "fonts": {
     "family": "Lexend Deca, sans-serif"
   },
