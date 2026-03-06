@@ -18,7 +18,7 @@ Este guia mostra o fluxo completo de integração com a API Pública, desde a cr
 Envie uma requisição POST para criar um novo pagamento:
 
 ```bash
-curl -X POST https://public-api-prod.paguebit.com/public-api/v1/payments \
+curl -X POST https://public-api-prod.dominipay.com.br/api-public/payments \
   -H "Authorization: Bearer SEU_TOKEN_AQUI" \
   -H "Content-Type: application/json" \
   -d '{
@@ -175,7 +175,7 @@ Sempre retorne status 200 rapidamente. Processamento demorado deve ser feito de 
 Você pode consultar o status atual de um pagamento a qualquer momento:
 
 ```bash
-curl -X GET https://public-api-prod.paguebit.com/public-api/v1/payments/pay_123 \
+curl -X GET https://public-api-prod.dominipay.com.br/api-public/payments/pay_123 \
   -H "Authorization: Bearer SEU_TOKEN_AQUI"
 ```
 
@@ -240,7 +240,7 @@ Veja todos os erros possíveis e como tratá-los na [página de Erros](/public-a
 ```javascript
 const axios = require('axios');
 
-const API_URL = 'https://public-api-prod.paguebit.com/public-api/v1';
+const API_URL = 'https://public-api-prod.dominipay.com.br/api-public';
 const API_TOKEN = process.env.API_TOKEN;
 
 async function criarPagamento() {
