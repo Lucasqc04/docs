@@ -13,7 +13,7 @@ Se um pagamento for criado com `webhookUrl`, a API enviará notificações HTTP 
 
 Todos os webhooks enviados pela API pública são assinados digitalmente para garantir:
 
-* **Autenticidade** (o webhook foi realmente enviado pela Paguebit)
+* **Autenticidade** (o webhook foi realmente enviado pela Dominipay)
 * **Integridade** (o payload não foi alterado)
 * **Proteção contra replay attacks**
 
@@ -25,12 +25,12 @@ Cada webhook inclui os seguintes headers HTTP:
 
 | Header                 | Descrição                         |
 | ---------------------- | --------------------------------- |
-| `X-Paguebit-Signature` | Assinatura HMAC-SHA256 do payload |
-| `X-Paguebit-Timestamp` | Timestamp Unix (segundos)         |
-| `X-Paguebit-Event-Id`  | ID único do evento                |
+| `X-Dominipay-Signature` | Assinatura HMAC-SHA256 do payload |
+| `X-Dominipay-Timestamp` | Timestamp Unix (segundos)         |
+| `X-Dominipay-Event-Id`  | ID único do evento                |
 
 > **Observação:** headers HTTP são *case-insensitive*.
-> `X-Paguebit-Signature` e `x-paguebit-signature` são equivalentes.
+> `X-Dominipay-Signature` e `x-dominipay-signature` são equivalentes.
 
 ---
 
@@ -47,7 +47,7 @@ A cada webhook enviado, a API:
    {timestamp}.{rawBody}
    ```
 3. Gera uma assinatura usando **HMAC-SHA256**
-4. Envia o resultado no header `X-Paguebit-Signature` (hexadecimal)
+4. Envia o resultado no header `X-Dominipay-Signature` (hexadecimal)
 
 ### Formato matemático
 
@@ -64,8 +64,8 @@ Para validar um webhook recebido:
 
 1. Leia os headers:
 
-   * `X-Paguebit-Signature`
-   * `X-Paguebit-Timestamp`
+   * `X-Dominipay-Signature`
+   * `X-Dominipay-Timestamp`
 2. Obtenha o **corpo bruto da requisição**
 3. Gere a assinatura localmente usando o mesmo algoritmo
 4. Compare as assinaturas usando comparação segura
@@ -103,8 +103,8 @@ app.post(
   '/webhook',
   express.raw({ type: 'application/json' }),
   (req, res) => {
-    const signature = req.headers['x-paguebit-signature'] as string;
-    const timestamp = req.headers['x-paguebit-timestamp'] as string;
+    const signature = req.headers['x-dominipay-signature'] as string;
+    const timestamp = req.headers['x-dominipay-timestamp'] as string;
     const rawBody = req.body.toString('utf8');
 
     if (!signature || !timestamp) {
@@ -224,8 +224,8 @@ Essas ferramentas permitem validar rapidamente a assinatura antes de ir para pro
 | Item                   | Valor                   |
 | ---------------------- | ----------------------- |
 | Algoritmo              | HMAC-SHA256             |
-| Header da assinatura   | `X-Paguebit-Signature`  |
-| Header do timestamp    | `X-Paguebit-Timestamp`  |
+| Header da assinatura   | `X-Dominipay-Signature`  |
+| Header do timestamp    | `X-Dominipay-Timestamp`  |
 | Payload assinado       | `{timestamp}.{rawBody}` |
 | Encoding               | Hexadecimal             |
 | Proteção contra replay | ✅                       |

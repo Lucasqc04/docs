@@ -1,12 +1,12 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "PagueBit Public API",
+    "title": "Dominipay Public API",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "https://public-api-prod.paguebit.com"
+      "url": "https://public-api-prod.dominipay.com.br"
     }
   ],
   "components": {
