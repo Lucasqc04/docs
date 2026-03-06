@@ -2,7 +2,7 @@
 title: 'Endpoints'
 ---
 
-Explore e teste os principais endpoints da API Pública do PagueBit diretamente abaixo. Utilize o playground interativo para simular requisições e visualizar respostas em tempo real.
+Explore e teste os principais endpoints da API Pública do Dominipay diretamente abaixo. Utilize o playground interativo para simular requisições e visualizar respostas em tempo real.
 
 ---
 
@@ -36,16 +36,19 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
   Status do pagamento (`pending`, `approved`, etc)
 </ResponseField>
 <ResponseField name="amount" type="number" required>
-  Valor do pagamento
+  Valor final do pagamento
+</ResponseField>
+<ResponseField name="feeAmount" type="number">
+  Taxa aplicada (quando houver)
+</ResponseField>
+<ResponseField name="liquidValue" type="number">
+  Valor líquido (quando houver)
 </ResponseField>
 <ResponseField name="storeId" type="string" required>
   ID da loja
 </ResponseField>
 <ResponseField name="createdAt" type="string" required>
   Data de criação (ISO)
-</ResponseField>
-<ResponseField name="webhookUrl" type="string">
-  URL do webhook
 </ResponseField>
 <ResponseField name="observation" type="string">
   Observação livre
@@ -63,6 +66,10 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
   Indica se o pagamento é público (sempre <code>true</code> para pagamentos criados pela API pública)
 </ResponseField>
 
+<Note>
+A rota `POST /api-public/payments` não retorna `webhookUrl` no payload de resposta.
+</Note>
+
 #### Exemplo de resposta
 
 ```json
@@ -72,7 +79,8 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
   "amount": 150.0,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
-  "webhookUrl": "https://example.com/webhook",
+  "feeAmount": 1.0,
+  "liquidValue": 149.0,
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
   "qrCodeUrl": "https://.../qrcode.png",
@@ -83,8 +91,8 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
 
 #### Possíveis erros
 
-- Valor mínimo permitido para API pública é R$ 5,00.
-- Valor máximo permitido para API pública é R$ 3000,00.
+- `Valor mínimo permitido para geração de pagamentos é R$ 5,00.`
+- `Valor máximo permitido para geração de pagamentos é R$ 3000,00.`
 
 ---
 
@@ -109,7 +117,13 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
   Status do pagamento
 </ResponseField>
 <ResponseField name="amount" type="number" required>
-  Valor do pagamento
+  Valor final do pagamento
+</ResponseField>
+<ResponseField name="feeAmount" type="number">
+  Taxa aplicada (quando houver)
+</ResponseField>
+<ResponseField name="liquidValue" type="number">
+  Valor líquido (quando houver)
 </ResponseField>
 <ResponseField name="storeId" type="string" required>
   ID da loja
@@ -118,7 +132,7 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
   Data de criação (ISO)
 </ResponseField>
 <ResponseField name="webhookUrl" type="string">
-  URL do webhook
+  URL de webhook salva para este pagamento (somente nas rotas GET)
 </ResponseField>
 <ResponseField name="observation" type="string">
   Observação livre
@@ -145,6 +159,8 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
   "amount": 150.0,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
+  "feeAmount": 1.0,
+  "liquidValue": 149.0,
   "webhookUrl": "https://example.com/webhook",
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
@@ -204,6 +220,8 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
       "amount": 150.0,
       "storeId": "store_abc",
       "createdAt": "2025-12-16T15:00:00.000Z",
+      "feeAmount": 1.0,
+      "liquidValue": 149.0,
       "webhookUrl": "https://example.com/webhook",
       "observation": "Pedido #9876",
       "email": "cliente@example.com",
@@ -217,6 +235,8 @@ Explore e teste os principais endpoints da API Pública do PagueBit diretamente 
       "amount": 200.0,
       "storeId": "store_abc",
       "createdAt": "2025-12-16T16:00:00.000Z",
+      "feeAmount": null,
+      "liquidValue": null,
       "webhookUrl": null,
       "observation": null,
       "email": "outrocliente@example.com",

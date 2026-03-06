@@ -13,13 +13,18 @@ Se um pagamento for criado com `webhookUrl`, a API enviará notificações HTTP 
 
 Todos os webhooks enviados pela API pública são assinados digitalmente para garantir:
 
-* **Autenticidade** (o webhook foi realmente enviado pela Paguebit)
+* **Autenticidade** (o webhook foi realmente enviado pela Dominipay)
 * **Integridade** (o payload não foi alterado)
 * **Proteção contra replay attacks**
 
 ---
 
 ## Headers enviados
+
+
+<Note>
+Apesar da marca Dominipay, os headers técnicos de webhook atualmente usam o prefixo legado `X-Paguebit-*` para compatibilidade.
+</Note>
 
 Cada webhook inclui os seguintes headers HTTP:
 
@@ -159,6 +164,8 @@ Campos enviados em **todos os eventos**:
 | `observation` | string? | Observação                      |
 | `qrCodeUrl`   | string? | URL do QR Code                  |
 | `qrCopyPaste` | string? | QR Copia e Cola                 |
+| `feeAmount`   | number? | Taxa aplicada (quando houver)   |
+| `liquidValue` | number? | Valor líquido (quando houver)   |
 | `isPublic`    | boolean | Indica se o pagamento é público |
 
 ### Campo adicional em `payment.status_changed`
@@ -179,6 +186,8 @@ Campos enviados em **todos os eventos**:
   "amount": 150,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
+  "feeAmount": 1.0,
+  "liquidValue": 149.0,
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
   "qrCodeUrl": "https://.../qrcode.png",
@@ -198,6 +207,8 @@ Campos enviados em **todos os eventos**:
   "amount": 150,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
+  "feeAmount": 1.0,
+  "liquidValue": 149.0,
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
   "qrCodeUrl": "https://.../qrcode.png",

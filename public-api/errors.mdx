@@ -30,10 +30,10 @@ Erros relacionados à autenticação.
 
 ```bash
 # ❌ Errado
-curl -X POST https://public-api-prod.paguebit.com/public-api/v1/payments
+curl -X POST https://public-api-prod.dominipay.com.br/api-public/payments
 
 # ✅ Correto
-curl -X POST https://public-api-prod.paguebit.com/public-api/v1/payments \
+curl -X POST https://public-api-prod.dominipay.com.br/api-public/payments \
   -H "Authorization: Bearer SEU_TOKEN_AQUI"
 ```
 
@@ -61,6 +61,17 @@ try {
   }
 }
 ```
+
+
+### Token antigo (rotação de token)
+
+**Mensagem:** `Apenas o token mais recente é válido.`
+
+**Causa:** A loja gerou um token novo e o token anterior deixou de ser aceito.
+
+**Solução:**
+- Gere um token novo no painel (`https://admin.dominipay.com.br/profile?tab=store`)
+- Atualize sua integração para usar apenas o token ativo mais recente
 
 ## 403 Forbidden
 
@@ -199,6 +210,7 @@ async function buscarPagamento(paymentId) {
 |--------|----------|-------|
 | 401 | Bearer token ausente. | Header `Authorization` não enviado |
 | 401 | Token inválido ou expirado. | Token errado, expirado ou desativado |
+| 401 | Apenas o token mais recente é válido. | Token antigo após rotação de token |
 | 403 | Loja inativa. | Loja associada ao token está desativada |
 | 400 | Valor mínimo permitido... | `amount` < 5 |
 | 400 | Valor máximo permitido... | `amount` > 3000 |

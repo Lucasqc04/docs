@@ -4,7 +4,8 @@ title: Autenticação
 
 - **Tipo**: Bearer Token
 - **Header**: `Authorization: Bearer <token>`
-- O token é vinculado a uma loja, assim todos os pagamentos vão para a mesma.
+- O token é vinculado a uma loja; os pagamentos criados ficam sempre no contexto desta loja.
+- Somente o **token ativo mais recente** da loja é aceito pela API.
 
 ## Webhook Secret
 
@@ -15,3 +16,13 @@ Guarde o webhookSecret gerado ao criar o token, pois ele não será mostrado nov
 </Warning>
 
 Para mais detalhes sobre como validar a assinatura dos webhooks, consulte a seção [Webhooks](/public-api/webhooks).
+
+## Como gerar o token
+
+Você pode gerar o token no painel da loja em:
+
+- `https://admin.dominipay.com.br/profile?tab=store`
+
+<Warning>
+A geração do token público requer **KYC aprovado** na loja.
+</Warning>
