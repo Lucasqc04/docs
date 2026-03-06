@@ -8,7 +8,7 @@ Este guia mostra o fluxo completo de integração com a API Pública, desde a cr
 ## Visão geral do fluxo
 
 1. **Criar pagamento** - Enviar requisição POST para criar um novo pagamento
-2. **Receber resposta** - Obter ID do pagamento e URL de checkout
+2. **Receber resposta** - Obter ID do pagamento e dados de cobrança (QR Code e Pix copia e cola)
 3. **Cliente realiza pagamento** - Usuário completa o pagamento via Pix
 4. **Receber webhook** - Sua aplicação recebe notificação automática
 5. **Consultar status** - Verificar detalhes e status final do pagamento
@@ -38,7 +38,8 @@ curl -X POST https://public-api-prod.dominipay.com.br/api-public/payments \
   "amount": 150.0,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
-  "webhookUrl": "https://example.com/webhook",
+  "feeAmount": 1.0,
+  "liquidValue": 149.0,
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
   "qrCodeUrl": "https://.../qrcode.png",
@@ -112,11 +113,13 @@ Enviado imediatamente após a criação do pagamento:
   "amount": 150.0,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
-  "webhookUrl": "https://example.com/webhook",
+  "feeAmount": 1.0,
+  "liquidValue": 149.0,
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
   "qrCodeUrl": "https://.../qrcode.png",
-  "qrCopyPaste": "000201010212..."
+  "qrCopyPaste": "000201010212...",
+  "isPublic": true
 }
 ```
 
@@ -133,11 +136,13 @@ Enviado quando o status do pagamento muda (ex: de `pending` para `approved`):
   "amount": 150.0,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
-  "webhookUrl": "https://example.com/webhook",
+  "feeAmount": 1.0,
+  "liquidValue": 149.0,
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
   "qrCodeUrl": "https://.../qrcode.png",
-  "qrCopyPaste": "000201010212..."
+  "qrCopyPaste": "000201010212...",
+  "isPublic": true
 }
 ```
 
@@ -188,6 +193,8 @@ curl -X GET https://public-api-prod.dominipay.com.br/api-public/payments/pay_123
   "amount": 150.0,
   "storeId": "store_abc",
   "createdAt": "2025-12-16T15:00:00.000Z",
+  "feeAmount": 1.0,
+  "liquidValue": 149.0,
   "webhookUrl": "https://example.com/webhook",
   "observation": "Pedido #9876",
   "email": "cliente@example.com",
@@ -296,7 +303,7 @@ async function aguardarPagamento(paymentId) {
       return;
     }
     
-    if (status === 'expired' || status === 'cancelled') {
+    if (status === 'not_approved') {
       console.log('Pagamento não foi completado');
       return;
     }
